@@ -1,0 +1,338 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "API de Biblioteca de Livros",
+    "description": "Uma API para gerenciar uma coleção de livros, seus autores e empréstimos.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:5000",
+      "description": "Servidor de desenvolvimento local"
+    }
+  ],
+  "paths": {
+    "/livros": {
+      "get": {
+        "summary": "Lista todos os livros",
+        "description": "Retorna uma lista de livros, com opções de filtro, ordenação e paginação.",
+        "parameters": [
+          {
+            "name": "autor",
+            "in": "query",
+            "description": "Filtra livros pelo nome do autor (case-insensitive).",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "disponivel",
+            "in": "query",
+            "description": "Filtra livros por disponibilidade.",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Campo para ordenação. Valores permitidos: id, titulo, ano_publicacao.",
+            "schema": {
+              "type": "string",
+              "enum": ["id", "titulo", "ano_publicacao"],
+              "default": "id"
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "description": "Direção da ordenação.",
+            "schema": {
+              "type": "string",
+              "enum": ["asc", "desc"],
+              "default": "asc"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Número da página para paginação.",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "Quantidade de itens por página.",
+            "schema": {
+              "type": "integer",
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Uma lista paginada de livros.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LivroExpandido"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Cria um novo livro",
+        "description": "Adiciona um novo livro à biblioteca.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LivroEntrada"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Livro criado com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LivroExpandido"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requisição inválida por dados incompletos ou autor inexistente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErroBadRequest"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/livros/{livro_id}": {
+      "get": {
+        "summary": "Busca um livro por ID",
+        "parameters": [
+          {
+            "name": "livro_id",
+            "in": "path",
+            "required": true,
+            "description": "ID do livro a ser retornado.",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detalhes do livro.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LivroExpandido"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Livro não encontrado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErroNotFound"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Atualiza um livro existente",
+        "parameters": [
+          {
+            "name": "livro_id",
+            "in": "path",
+            "required": true,
+            "description": "ID do livro a ser atualizado.",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LivroUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Livro atualizado com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LivroExpandido"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requisição inválida por autor inexistente ou corpo vazio.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErroBadRequest"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Livro não encontrado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErroNotFound"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Remove um livro",
+        "parameters": [
+          {
+            "name": "livro_id",
+            "in": "path",
+            "required": true,
+            "description": "ID do livro a ser removido.",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Livro removido com sucesso. Nenhum conteúdo."
+          },
+          "404": {
+            "description": "Livro não encontrado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErroNotFound"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Autor": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "example": 1 },
+          "nome": { "type": "string", "example": "Robert C. Martin" }
+        }
+      },
+      "LinkHATEOAS": {
+        "type": "object",
+        "properties": {
+          "rel": { "type": "string" },
+          "href": { "type": "string", "format": "uri" },
+          "method": { "type": "string" }
+        }
+      },
+      "LivroExpandido": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "example": 1 },
+          "titulo": { "type": "string", "example": "Clean Architecture" },
+          "isbn": { "type": "string", "example": "978-0134494166" },
+          "ano_publicacao": { "type": "integer", "example": 2017 },
+          "disponivel": { "type": "boolean", "example": true },
+          "autor": { "$ref": "#/components/schemas/Autor" },
+          "_links": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LinkHATEOAS"
+            }
+          }
+        }
+      },
+      "LivroEntrada": {
+        "type": "object",
+        "required": ["titulo", "autor_id"],
+        "properties": {
+          "titulo": { "type": "string", "example": "Domain-Driven Design" },
+          "autor_id": {
+            "type": "integer",
+            "description": "ID do autor existente.",
+            "example": 3
+          },
+          "isbn": { "type": "string", "example": "978-0321125217" },
+          "ano_publicacao": { "type": "integer", "example": 2003 },
+          "disponivel": { "type": "boolean", "default": true, "example": true }
+        }
+      },
+      "LivroUpdate": {
+        "type": "object",
+        "properties": {
+          "titulo": { "type": "string" },
+          "autor_id": {
+            "type": "integer",
+            "description": "ID do autor existente."
+          },
+          "isbn": { "type": "string" },
+          "ano_publicacao": { "type": "integer" },
+          "disponivel": { "type": "boolean" }
+        },
+        "minProperties": 1
+      },
+      "ErroNotFound": {
+        "type": "object",
+        "properties": {
+          "erro": { "type": "string", "example": "Recurso não encontrado" },
+          "codigo": { "type": "integer", "example": 404 },
+          "timestamp": { "type": "string", "format": "date-time" },
+          "caminho": { "type": "string", "example": "/livros/99" }
+        }
+      },
+      "ErroBadRequest": {
+        "type": "object",
+        "properties": {
+          "erro": { "type": "string", "example": "Requisição inválida" },
+          "mensagem": {
+            "type": "string",
+            "example": "Dados incompletos. 'titulo' e 'autor_id' são obrigatórios."
+          },
+          "codigo": { "type": "integer", "example": 400 },
+          "timestamp": { "type": "string", "format": "date-time" },
+          "caminho": { "type": "string", "example": "/livros" }
+        }
+      }
+    }
+  }
+}
